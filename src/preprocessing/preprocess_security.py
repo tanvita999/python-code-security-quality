@@ -93,6 +93,12 @@ def main():
     # Remove empty-code statements.
     train_processed = remove_empty_code(train_processed)
     test_processed = remove_empty_code(test_processed)
+    print()
+    print("Training label distribution:")
+    print(train_processed["label"].value_counts().sort_index().to_dict())
+    print()
+    print("Test label distribution:")
+    print(test_processed["label"].value_counts().sort_index().to_dict())
 
     # Report cleaning results.
     print()
