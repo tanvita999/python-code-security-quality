@@ -66,7 +66,7 @@ The raw security dataset files used in this project are:
 ```text
 data/raw/security/detectvul/
 ├── train-00000-of-00001-4cfe5148f991ecb4.parquet
-└── test-00000-of-00001-7b79e04247817e16.parquet
+└── test-00000-of-00001-7b79ec042f991ecb4.parquet
 ```
 
 The raw files are preserved without modification.
@@ -272,7 +272,7 @@ The target column is:
 LargeClass
 ```
 
-The original dataset contains:
+The dataset file used in this project contains:
 
 ```text
 1,000 rows
@@ -363,7 +363,7 @@ The dataset contains 20 columns consisting of software metrics similar to the La
 The original target column is:
 
 ```text
-Experince_Based 
+Experince Based 
 ```
 
 The source dataset contains a trailing space in the target column name.
@@ -371,14 +371,14 @@ The source dataset contains a trailing space in the target column name.
 The preprocessing pipeline removes leading and trailing whitespace from column names. Therefore, the processed dataset uses:
 
 ```text
-Experince_Based
+Experince Based
 ```
 
 as the target column.
 
-The spelling `Experince_Based` is preserved from the source dataset after whitespace normalization.
+The spelling `Experince Based` is preserved from the source dataset after whitespace normalization.
 
-The original dataset contains:
+The dataset file used in this project contains:
 
 ```text
 894 rows
@@ -770,13 +770,13 @@ The quality preprocessing pipeline removes leading and trailing whitespace from 
 The Long Method source dataset contains a trailing space in its target column name:
 
 ```text
-Experince_Based 
+Experince Based 
 ```
 
 After preprocessing, the column name becomes:
 
 ```text
-Experince_Based
+Experince Based
 ```
 
 The spelling of the source column is otherwise preserved.
@@ -882,7 +882,7 @@ Number of columns:
 Target:
 
 ```text
-Experince_Based
+Experince Based
 ```
 
 ---
