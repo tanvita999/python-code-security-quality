@@ -1,0 +1,5 @@
+variant,predicted_class,confidence,prediction_matches_original
+original,0,0.9973867535591125,True
+leading_trailing_whitespace,0,0.9973492622375488,True
+extra_blank_lines,0,0.9973601698875427,True
+trailing_newline,0,0.9973867535591125,True

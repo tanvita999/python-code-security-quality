@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Datasets - keep local unless approved for sharing
+data/
+
+# Trained models - 9.3 GB, keep local
+models/
+
+# Experiment caches and logs
+.cache/
+*.log
