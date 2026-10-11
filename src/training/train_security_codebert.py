@@ -1,19 +1,9 @@
-<<<<<<< HEAD
-
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from datasets import Dataset
 from sklearn.metrics import accuracy_score, f1_score
-=======
-import numpy as np
-import pandas as pd
-
-from datasets import Dataset
-from sklearn.metrics import accuracy_score, f1_score
-
->>>>>>> 2ba11aa700932c14c0a461728612f901b305867c
 from transformers import (
     AutoTokenizer,
     AutoModelForSequenceClassification,
@@ -21,14 +11,10 @@ from transformers import (
     TrainingArguments,
 )
 
-<<<<<<< HEAD
-# Configuration
 MODEL_NAME = "microsoft/codebert-base"
 
 TRAIN_CSV = Path("data/processed/security/security_train.csv")
 TEST_CSV = Path("data/processed/security/security_test.csv")
-
-# Keep this experiment separate from existing models.
 OUTPUT_DIR = Path("models/security_codebert_balanced")
 
 MAX_TRAIN_SAMPLES = 5000
@@ -36,18 +22,10 @@ BATCH_SIZE = 4
 NUM_EPOCHS = 1
 MAX_LENGTH = 256
 RANDOM_SEED = 42
-=======
-
-MODEL_NAME = "microsoft/codebert-base"
-
-TRAIN_PATH = "data/processed/security/security_train.csv"
-TEST_PATH = "data/processed/security/security_test.csv"
->>>>>>> 2ba11aa700932c14c0a461728612f901b305867c
 
 
 def compute_metrics(eval_pred):
     logits, labels = eval_pred
-<<<<<<< HEAD
     predictions = np.argmax(logits, axis=-1)
 
     return {
@@ -58,38 +36,11 @@ def compute_metrics(eval_pred):
         "weighted_f1": f1_score(
             labels, predictions, average="weighted", zero_division=0
         ),
-=======
-
-    predictions = np.argmax(logits, axis=-1)
-
-    accuracy = accuracy_score(labels, predictions)
-
-    macro_f1 = f1_score(
-        labels,
-        predictions,
-        average="macro",
-        zero_division=0,
-    )
-
-    weighted_f1 = f1_score(
-        labels,
-        predictions,
-        average="weighted",
-        zero_division=0,
-    )
-
-    return {
-        "accuracy": accuracy,
-        "macro_f1": macro_f1,
-        "weighted_f1": weighted_f1,
->>>>>>> 2ba11aa700932c14c0a461728612f901b305867c
     }
 
 
 def main():
-<<<<<<< HEAD
     print("Loading datasets...")
-
     train_df = pd.read_csv(TRAIN_CSV)
     test_df = pd.read_csv(TEST_CSV)
 
@@ -100,56 +51,41 @@ def main():
                 f"{name} dataset is missing columns: {sorted(missing)}"
             )
 
-    train_df = train_df.dropna(subset=["label"]).copy()
+    train_df = train_df.dropna(subset=["code", "label"]).copy()
     test_df = test_df.dropna(subset=["code", "label"]).copy()
-
     train_df["label"] = train_df["label"].astype(int)
     test_df["label"] = test_df["label"].astype(int)
 
     labels = sorted(train_df["label"].unique().tolist())
-    expected = list(range(max(labels) + 1))
-
-    if labels != expected:
+    if labels != list(range(max(labels) + 1)):
         raise ValueError(f"Unexpected training labels: {labels}")
 
     if not set(test_df["label"].unique()).issubset(set(labels)):
         raise ValueError("Test set contains labels absent from training data.")
 
-    
-    # Create a balanced training sample.
-    # Sample up to an equal number from each class.
-    class_count = train_df["label"].nunique()
-    per_class = MAX_TRAIN_SAMPLES // class_count
-
+    # Sample approximately equally from each class.
+    per_class = MAX_TRAIN_SAMPLES // len(labels)
     sampled_groups = []
 
     for label_value, group in train_df.groupby("label"):
-        group_sample = group.sample(
-            n=min(per_class, len(group)),
-            random_state=RANDOM_SEED,
+        sampled_groups.append(
+            group.sample(
+                n=min(per_class, len(group)),
+                random_state=RANDOM_SEED,
+            )
         )
-        sampled_groups.append(group_sample)
 
     train_df = pd.concat(sampled_groups, ignore_index=True)
-
-    # Shuffle the selected training examples.
     train_df = train_df.sample(
-        frac=1,
-        random_state=RANDOM_SEED,
+        frac=1, random_state=RANDOM_SEED
     ).reset_index(drop=True)
-
-    # Keep the full, original test distribution.
     test_df = test_df.reset_index(drop=True)
 
-
-    print(f"Balanced training examples: {len(train_df)}")
-    print(f"Full test examples: {len(test_df)}")
-    print("\nTraining label counts:")
+    print(f"Training examples: {len(train_df)}")
+    print(f"Test examples: {len(test_df)}")
+    print("Training label counts:")
     print(train_df["label"].value_counts().sort_index())
-    print("\nTest label counts:")
-    print(test_df["label"].value_counts().sort_index())
 
-    print("\nLoading tokenizer and model...")
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
     model = AutoModelForSequenceClassification.from_pretrained(
         MODEL_NAME,
@@ -161,15 +97,14 @@ def main():
             str(code) if pd.notna(code) else ""
             for code in batch["code"]
         ]
-
-        result = tokenizer(
+        encoded = tokenizer(
             texts,
             truncation=True,
             padding="max_length",
             max_length=MAX_LENGTH,
         )
-        result["labels"] = batch["label"]
-        return result
+        encoded["labels"] = batch["label"]
+        return encoded
 
     train_dataset = Dataset.from_pandas(
         train_df[["code", "label"]].reset_index(drop=True)
@@ -191,7 +126,6 @@ def main():
 
     train_dataset.set_format("torch")
     test_dataset.set_format("torch")
-
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     training_args = TrainingArguments(
@@ -210,112 +144,27 @@ def main():
         save_total_limit=1,
         dataloader_pin_memory=False,
         seed=RANDOM_SEED,
-=======
-    train_df = pd.read_csv(TRAIN_PATH)
-    test_df = pd.read_csv(TEST_PATH)
-
-    train_data = Dataset.from_pandas(
-        train_df[["code", "label"]],
-        preserve_index=False,
-    )
-
-    test_data = Dataset.from_pandas(
-        test_df[["code", "label"]],
-        preserve_index=False,
-    )
-
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-
-    def tokenize(batch):
-        return tokenizer(
-            batch["code"],
-            truncation=True,
-            padding="max_length",
-            max_length=256,
-        )
-
-    train_data = train_data.map(
-        tokenize,
-        batched=True,
-    )
-
-    test_data = test_data.map(
-        tokenize,
-        batched=True,
-    )
-
-    train_data = train_data.rename_column(
-        "label",
-        "labels",
-    )
-
-    test_data = test_data.rename_column(
-        "label",
-        "labels",
-    )
-
-    train_data.set_format("torch")
-    test_data.set_format("torch")
-
-    num_labels = int(train_df["label"].nunique())
-
-    model = AutoModelForSequenceClassification.from_pretrained(
-        MODEL_NAME,
-        num_labels=num_labels,
-    )
-
-    training_args = TrainingArguments(
-        output_dir="models/security_codebert",
-        eval_strategy="epoch",
-        save_strategy="epoch",
-        learning_rate=2e-5,
-        per_device_train_batch_size=8,
-        per_device_eval_batch_size=8,
-        num_train_epochs=3,
-        weight_decay=0.01,
-        load_best_model_at_end=True,
-        metric_for_best_model="macro_f1",
-        greater_is_better=True,
-        report_to="none",
->>>>>>> 2ba11aa700932c14c0a461728612f901b305867c
     )
 
     trainer = Trainer(
         model=model,
         args=training_args,
-<<<<<<< HEAD
         train_dataset=train_dataset,
         eval_dataset=test_dataset,
         compute_metrics=compute_metrics,
     )
 
-    print("\nStarting balanced-sample training...")
+    print("Starting balanced-sample training...")
     trainer.train()
 
-    print("\nFinal evaluation on the full test set:")
+    print("Evaluating on the full test set...")
     metrics = trainer.evaluate()
-
     for key, value in metrics.items():
         print(f"{key}: {value}")
 
     trainer.save_model(str(OUTPUT_DIR))
     tokenizer.save_pretrained(str(OUTPUT_DIR))
-
-    print(f"\nModel saved to: {OUTPUT_DIR}")
-    print("Training complete.")
-=======
-        train_dataset=train_data,
-        eval_dataset=test_data,
-        compute_metrics=compute_metrics,
-    )
-
-    trainer.train()
-
-    results = trainer.evaluate()
-
-    print("\nFinal Evaluation:")
-    print(results)
->>>>>>> 2ba11aa700932c14c0a461728612f901b305867c
+    print(f"Model saved to: {OUTPUT_DIR}")
 
 
 if __name__ == "__main__":
